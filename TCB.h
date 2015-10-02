@@ -1,8 +1,14 @@
 #include <ucontext.h>
 #include <string.h>
 
+//Queue structure
 typedef struct tcb{
-	//NOTE: Got to add more
+	int test;	//remove
+
+	//Pointers to previous and next nodes
+	struct tcb *next;
+	struct tcb *prev;
+
 	ucontext_t context;
 } TCB_t;
 
