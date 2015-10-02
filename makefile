@@ -1,5 +1,5 @@
 
-all:
+all: q.h TCB.h threads.h
 	gcc thread_test.c
 
 clean:

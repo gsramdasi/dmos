@@ -1,10 +1,20 @@
+/*
+ * File containing functions for all the queue operations
+ */
+
 #include "TCB.h"
 
+/*
+ * Not sure what to do here!!
+ */ 
 void InitQ(TCB_t *head){
 	//Not sure what to do 
 	return;
 }
 
+/*
+ * Adds new node at the back of the queue
+ */
 void AddQ(TCB_t *head, TCB_t *newNode){
 	TCB_t *temp = NULL;
 
@@ -36,7 +46,9 @@ void AddQ(TCB_t *head, TCB_t *newNode){
 	return;
 }
 
-//Should return a pointer to deleted item
+/* 
+ * Deletes the head and and retunrs back pointer to deleted node
+ */
 TCB_t* DelQ(TCB_t *head){
 	TCB_t *deletedNode = NULL;
 	TCB_t *prev = NULL;
@@ -60,11 +72,15 @@ TCB_t* DelQ(TCB_t *head){
 		head = head->next;
 	}
 
-	
+
+	//Not freeing memory for deleted node as we 
+	//have to send back the node	
 	return deletedNode;
 }
 
-//deletes the head and adds it to the tail, by just moving the header pointer to the next item.
+/*
+ * Deletes the head and adds it to the tail, by just moving the header pointer to the next item
+ */
 void RotateQ(TCB_t *head){
 	
 	//Move the head
