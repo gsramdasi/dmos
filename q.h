@@ -7,7 +7,7 @@
 /*
  * Not sure what to do here!!
  */ 
-void InitQ(TCB_t *head){
+void InitQ(TCB_t *Q){
 	//Not sure what to do 
 	return;
 }
@@ -15,32 +15,32 @@ void InitQ(TCB_t *head){
 /*
  * Adds new node at the back of the queue
  */
-void AddQ(TCB_t *head, TCB_t *newNode){
+void AddQ(TCB_t *Q, TCB_t *newNode){
 	TCB_t *temp = NULL;
 
 	//If queue is empty
-	if(head == NULL){
-		head = newNode;
+	if(Q == NULL){
+		Q = newNode;
 		newNode->next = NULL;
 		newNode->prev = NULL;
 	}
 	//If queue has one element
-	else if(head->next == head && head->prev == head){
-		newNode->next = head;
-		newNode->prev = head;
+	else if(Q->next == Q && Q->prev == Q){
+		newNode->next = Q;
+		newNode->prev = Q;
 
-		head->next = newNode;
-		head->prev = newNode;
+		Q->next = newNode;
+		Q->prev = newNode;
 	}
 	//If queue has more than one element
 	else{
 		//Update the tail of queue
-		temp = head->prev;
+		temp = Q->prev;
 		temp->next = newNode;
-		newNode->next = head;
+		newNode->next = Q;
 
 		newNode->prev = temp;
-		head->prev = newNode;
+		Q->prev = newNode;
 	}
 
 	return;
@@ -49,27 +49,27 @@ void AddQ(TCB_t *head, TCB_t *newNode){
 /* 
  * Deletes the head and and retunrs back pointer to deleted node
  */
-TCB_t* DelQ(TCB_t *head){
+TCB_t* DelQ(TCB_t *Q){
 	TCB_t *deletedNode = NULL;
 	TCB_t *prev = NULL;
 
 	//If queue is empty
-	if(head == NULL){
+	if(Q == NULL){
 		deletedNode = NULL;
 	}
 	//If queue has one element
-	else if(head->next == head && head->prev == head){
-		deletedNode = head;
-		head = NULL;
+	else if(Q->next == Q && Q->prev == Q){
+		deletedNode = Q;
+		Q = NULL;
 	}
 	//If queue has more than one element
 	else{
-		deletedNode = head;
+		deletedNode = Q;
 
-		prev = head->prev;
-		prev->next = head->next;
+		prev = Q->prev;
+		prev->next = Q->next;
 
-		head = head->next;
+		Q = Q->next;
 	}
 
 
@@ -81,10 +81,10 @@ TCB_t* DelQ(TCB_t *head){
 /*
  * Deletes the head and adds it to the tail, by just moving the header pointer to the next item
  */
-void RotateQ(TCB_t *head){
+void RotateQ(TCB_t *Q){
 	
 	//Move the head
-	head = head->next;
+	Q = Q->next;
 
 	return;
 }
