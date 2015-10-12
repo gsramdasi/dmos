@@ -15,24 +15,17 @@ void InitQ(TCB_t *Q){
 /*
  * Adds new node at the back of the queue
  */
-void AddQ(TCB_t *Q, TCB_t *newNode){
+void AddQ(TCB_t **Qp, TCB_t *newNode){
 	TCB_t *temp = NULL;
-
+	TCB_t *Q = *Qp;
 	//If queue is empty
 	if(Q == NULL){
 		Q = newNode;
-		newNode->next = NULL;
-		newNode->prev = NULL;
-	}
-	//If queue has one element
-	else if(Q->next == Q && Q->prev == Q){
 		newNode->next = Q;
 		newNode->prev = Q;
-
-		Q->next = newNode;
-		Q->prev = newNode;
+		*Qp = Q;
 	}
-	//If queue has more than one element
+	//If queue has one or more elements
 	else{
 		//Update the tail of queue
 		temp = Q->prev;
@@ -42,16 +35,17 @@ void AddQ(TCB_t *Q, TCB_t *newNode){
 		newNode->prev = temp;
 		Q->prev = newNode;
 	}
-
+	
 	return;
 }
 
 /* 
- * Deletes the head and and retunrs back pointer to deleted node
+ * Deletes the head and and returns back pointer to deleted node
  */
-TCB_t* DelQ(TCB_t *Q){
+TCB_t* DelQ(TCB_t **Qp){
 	TCB_t *deletedNode = NULL;
 	TCB_t *prev = NULL;
+	TCB_t *Q = *Qp;
 
 	//If queue is empty
 	if(Q == NULL){
@@ -68,24 +62,26 @@ TCB_t* DelQ(TCB_t *Q){
 
 		prev = Q->prev;
 		prev->next = Q->next;
-
+		
+		Q->next->prev = prev;
 		Q = Q->next;
 	}
 
 
 	//Not freeing memory for deleted node as we 
 	//have to send back the node	
+	*Qp = Q;
 	return deletedNode;
 }
 
 /*
  * Deletes the head and adds it to the tail, by just moving the header pointer to the next item
  */
-void RotateQ(TCB_t *Q){
+void RotateQ(TCB_t **Qp){
 	
 	//Move the head
-	Q = Q->next;
-
+	
+	*Qp = (*Qp)->next;
 	return;
 }
 
