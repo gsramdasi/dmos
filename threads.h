@@ -13,6 +13,7 @@ void run();
 void yield();
 void clean_exit();
 
+ucontext_t parent;
 TCB_t *RunQ = NULL;
 
 void start_thread(void (*function)(void)){ 
@@ -33,7 +34,7 @@ void start_thread(void (*function)(void)){
 }
 
 void run(){
-	ucontext_t parent;     // get a place to store the main context, for faking
+	//ucontext_t parent;     // get a place to store the main context, for faking
 	getcontext(&parent);   // magic sauce
 	swapcontext(&parent, &(RunQ->context));  // start the first thread
 
@@ -53,16 +54,21 @@ void yield(){
 //This is an additional function added by us to avoid memory leaks
 //casued by not freeing the queue. 
 void clean_exit(){
-	//Freeing RunQ;
 	TCB_t *node;
 
-	while(RunQ != NULL){
+	if(RunQ != NULL){
 		node = DelQ(&RunQ);
 		
 		free(node->context.uc_stack.ss_sp);
 		free(node);
 		node = NULL;
 	}
+
+	//Move to the other context in RunQ, if non move back to parent. 
+	if(RunQ != NULL)
+		setcontext(&(RunQ->context));
+	else
+		setcontext(&parent);
 	
 }
 

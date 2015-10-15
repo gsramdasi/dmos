@@ -23,7 +23,8 @@ void inc_x(void){
 		yield();
 	}
 
-	//clean_exit();
+	//Exit clean without any memory leaks
+	clean_exit();
 
 }
 
@@ -37,6 +38,7 @@ void inc_y(void){
 		yield();
 	}
 
+	//Exit clean without any memory leaks
 	clean_exit();
 }
 
@@ -47,6 +49,7 @@ void main(){
 	start_thread(inc_y);
 	run();
 
+	printf("Exiting\n");
 }
 
 
