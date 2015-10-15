@@ -1,7 +1,7 @@
 /*
  * Needs to be Updated
  */
-
+#include <stdio.h>
 #include <stdlib.h>
 #include "q.h"
 
@@ -11,11 +11,12 @@
 void start_thread(void (*function)(void));
 void run();
 void yield();
+void clean_exit();
 
 TCB_t *RunQ = NULL;
 
 void start_thread(void (*function)(void)){ 
-	stack_t *stack = NULL;	//TODO why int ? the malloc for stack will allocate 8192 x 4 bytes. Probably stack_t
+	stack_t *stack = NULL;	
 	TCB_t *qNode = NULL;
 	
 	//allocate a stack (via malloc) of a certain size (choose 8192)
@@ -32,13 +33,13 @@ void start_thread(void (*function)(void)){
 }
 
 void run(){
-	// real code
 	ucontext_t parent;     // get a place to store the main context, for faking
 	getcontext(&parent);   // magic sauce
 	swapcontext(&parent, &(RunQ->context));  // start the first thread
+
 }
 
-//similar to run
+//Yields the current process. 
 void yield(){
 	ucontext_t *currentCtx = &(RunQ->context);
 	
@@ -47,5 +48,21 @@ void yield(){
 
 	//swap the context, from previous thread to the thread pointed to by runQ
 	swapcontext(currentCtx, &(RunQ->context));
+}
+
+//This is an additional function added by us to avoid memory leaks
+//casued by not freeing the queue. 
+void clean_exit(){
+	//Freeing RunQ;
+	TCB_t *node;
+
+	while(RunQ != NULL){
+		node = DelQ(&RunQ);
+		
+		free(node->context.uc_stack.ss_sp);
+		free(node);
+		node = NULL;
+	}
+	
 }
 

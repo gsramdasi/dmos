@@ -14,7 +14,7 @@
 void main(){
 	printf("Test\n");	
 	char cmd='a';
-	int data;
+	int data = 0;
 	TCB_t *runq=NULL, *node, *start;
 	while (cmd != 'q'){
 		scanf("%c",&cmd);
@@ -22,7 +22,7 @@ void main(){
 		if(cmd == 'n'){
 			scanf("%d", &data);
 			node = (TCB_t*)malloc(sizeof(TCB_t));
-			node->test = data;
+			node->test = data++;
 			AddQ(&runq,node);
 			printf("Node added\n");
 		}

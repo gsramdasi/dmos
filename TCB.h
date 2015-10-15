@@ -3,7 +3,7 @@
 
 //Queue structure
 typedef struct tcb{
-	int test;	//remove
+	//int test;	//Added for testing purpose
 
 	//Pointers to previous and next nodes
 	struct tcb *next;

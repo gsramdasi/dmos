@@ -11,7 +11,8 @@
 #include <stdio.h>
 #include "threads.h"
 
-int global_var = 1001;
+int global_var = 1001;	//Both threads keep adding to this global variable.
+
 void inc_x(void){
 	int x = 1;
 	while(x <= 10){
@@ -21,6 +22,8 @@ void inc_x(void){
 		sleep(1);
 		yield();
 	}
+
+	//clean_exit();
 
 }
 
@@ -33,14 +36,17 @@ void inc_y(void){
 		sleep(1);
 		yield();
 	}
+
+	clean_exit();
 }
 
 void main(){
-	printf("Test\n");	
+	printf("Testing - \n");	
 
 	start_thread(inc_x);
 	start_thread(inc_y);
 	run();
+
 }
 
 

@@ -8,7 +8,7 @@
  * Not sure what to do here!!
  */ 
 void InitQ(TCB_t *Q){
-	//Not sure what to do 
+	//No code here as this function is not being used currently. 
 	return;
 }
 
