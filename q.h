@@ -100,7 +100,7 @@ int SearchQ(TCB_t **Qp, TCB_t *query){
 			return 1;
 		}
 
-		RotateQ(*Qp);
+		RotateQ(Qp);
 	}while(*Qp != start);
 		return 0;	//not found
 
