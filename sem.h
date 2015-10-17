@@ -19,41 +19,37 @@ Semaphore_t* CreateSem(int InputValue){
 }
 
 void P(Semaphore_t * sem){
-	TCB_t *blocked_task;
-
+	TCB_t *blocked_task = NULL;
 	sem->sem_ctr--;
-	/*
-	 * TODO Add the task to be blocked in the list, but do not remove from RunQ
-	 * Instead have a check here to see if RunQ is in the blocked list. If yes,
-	 * then yield right after sem_ctr--.
-	 *
-	 * Make corresponding changes to V as well
-	 */
-
-	printf("P-ing\n");
 	if (sem->sem_ctr < 0){
 		//block current thread
-		DEBUG;
 		if (!SearchQ(&sem->blocked_queue, RunQ)){
-			DEBUG;
+			//task is already blocked
 			blocked_task = DelQ(&RunQ);		//remove current task from RunQ and...
-			DEBUG;
 			AddQ(&sem->blocked_queue, blocked_task);//....block it
+			printf("Thread %d has been blocked\n", blocked_task->thread_id);
 		}
-		DEBUG;
-		yield();
+		if (RunQ != NULL)
+			setcontext(&(RunQ->context));
+		else{
+			printf("Deadlock Encountered !\n");
+			printf("Press ENTER to continue to the parent thread\n");	
+			while(getchar() != '\n');	
+			yield();
+		}
 	}
+
 }
 
 
 void V(Semaphore_t * sem){
-	TCB_t *unblocked;
+	TCB_t *unblocked_task;
 
 	sem->sem_ctr++;
-	printf("V-ing\n");
 	if (sem->sem_ctr <= 0){
-		DEBUG;
-		unblocked = DelQ(&sem->blocked_queue);	//Prepare the earliest blocked task for unblocking
-		DEBUG;
+		unblocked_task = DelQ(&sem->blocked_queue);	//Prepare the earliest blocked task for unblocking
+
+		AddQ(&RunQ, unblocked_task);
 	}
+	//setcontext(&(RunQ->context));
 }

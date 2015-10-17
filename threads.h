@@ -42,8 +42,13 @@ void run(){
 
 //Yields the current process. 
 void yield(){
-	ucontext_t *currentCtx = &(RunQ->context);
+	ucontext_t *currentCtx = NULL;
 	
+	if (RunQ == NULL)
+		setcontext(&parent);
+	
+	currentCtx = &(RunQ->context);
+
 	//rotate the runQ until a READY task is found;
 	RotateQ(&RunQ);
 
