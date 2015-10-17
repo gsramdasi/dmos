@@ -1,5 +1,6 @@
 /*
- * Main Test file
+ * NOT the Main Test file.
+ * Just the queue testing program
  * 
  * Members:
  * Gaurav (1206467752)
@@ -7,6 +8,8 @@
  * Amaresh (1207301416)
  *
  */
+
+
 
 #include <stdio.h>
 #include "threads.h"

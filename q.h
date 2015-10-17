@@ -18,6 +18,11 @@ void InitQ(TCB_t *Q){
 void AddQ(TCB_t **Qp, TCB_t *newNode){
 	TCB_t *temp = NULL;
 	TCB_t *Q = *Qp;
+	
+	//If newnode is empty
+	if (newNode == NULL){
+		return;
+	}
 	//If queue is empty
 	if(Q == NULL){
 		Q = newNode;

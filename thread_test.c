@@ -73,6 +73,7 @@ void main(){
 	
 	printf("Testing Semaphores - \n");	
 	
+	//Initialize semaphore with an initial value
 	my_sem = CreateSem(1);
 	start_thread(inc_x);
 	start_thread(inc_y);
@@ -81,7 +82,7 @@ void main(){
 
 	run();
 
-	printf("Exiting\n");
+	printf("Back in main\nNow, Exiting...\n");
 }
 
 

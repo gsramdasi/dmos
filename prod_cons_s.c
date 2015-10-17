@@ -35,7 +35,7 @@ void cons(void)
             out = (out+1) % N;
           V(mutex);
 	V(empty);
-        sleep(cons_delay);
+	sleep(cons_delay);
     }    
 }
 
@@ -43,11 +43,7 @@ void cons(void)
 int main()
 {
     int id[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-/*
-    init_sem(&full, 0);
-    init_sem(&empty, N);
-    init_sem(&mutex, 1);
-*/
+
 	full = CreateSem(0);
 	empty = CreateSem(N);
 	mutex = CreateSem(1);
