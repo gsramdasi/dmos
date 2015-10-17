@@ -85,7 +85,26 @@ void RotateQ(TCB_t **Qp){
 	return;
 }
 
+/*
+ * Searches the queue for the node
+ */
+int SearchQ(TCB_t **Qp, TCB_t *query){
+	TCB_t *start;
+	start = *Qp;
+	if (*Qp == NULL)
+		return 0;
+	
+	do{
+		if (query == *Qp){
+			//found 
+			return 1;
+		}
 
+		RotateQ(*Qp);
+	}while(*Qp != start);
+		return 0;	//not found
+
+	}
 
 
 

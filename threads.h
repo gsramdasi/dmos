@@ -44,7 +44,7 @@ void run(){
 void yield(){
 	ucontext_t *currentCtx = &(RunQ->context);
 	
-	//rotate the run Q;
+	//rotate the runQ until a READY task is found;
 	RotateQ(&RunQ);
 
 	//swap the context, from previous thread to the thread pointed to by runQ

@@ -1,10 +1,15 @@
 #include <ucontext.h>
 #include <string.h>
 
+#define BLOCKED 0
+#define READY 1
+
+#define DEBUG printf("%s : %d\n", __func__, __LINE__);
+
 //Queue structure
 typedef struct tcb{
 	//int test;	//Added for testing purpose
-
+	
 	//Pointers to previous and next nodes
 	struct tcb *next;
 	struct tcb *prev;
