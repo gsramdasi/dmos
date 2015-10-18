@@ -5,7 +5,7 @@
 
 //Queue structure
 typedef struct tcb{
-	//int test;	//Added for testing purpose
+	int test;	//Added for testing purpose
 	
 	int thread_id;
 

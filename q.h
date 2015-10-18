@@ -107,9 +107,25 @@ int SearchQ(TCB_t **Qp, TCB_t *query){
 
 		RotateQ(Qp);
 	}while(*Qp != start);
-		return 0;	//not found
 
+	return 0;	//not found
+}
+
+int lengthQ(TCB_t **Qp){
+	int count = 0;
+	TCB_t *temp = *Qp;
+	TCB_t *head = *Qp;
+
+	while(temp != NULL){
+		count++;
+
+		temp = temp->next;
+		if(temp == head)
+			break;
 	}
+
+	return count;
+}
 
 
 

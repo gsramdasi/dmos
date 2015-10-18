@@ -10,7 +10,6 @@ Semaphore_t *empty, *full, *mutex;
 int buffer[N];
 int in = 0, out = 0, item_num=0, prod_delay = 1, cons_delay = 1;
 
-
 void prod (void)
 {
     while (1){ 
@@ -44,9 +43,9 @@ int main()
 {
     int id[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-	full = CreateSem(0);
-	empty = CreateSem(N);
-	mutex = CreateSem(1);
+	full = CreateSem(0, 0);
+	empty = CreateSem(N, 1);
+	mutex = CreateSem(1, 2);
 
     start_thread(prod);
     start_thread(cons);
@@ -57,8 +56,16 @@ int main()
     start_thread(prod);
     start_thread(cons);
 	run();
-    while (1) { scanf("%d %d", &prod_delay, &cons_delay); 
-                printf ("\n\n\t\t\t\tP=%d C=%d\n\n\n", prod_delay, cons_delay);
+	DEBUG;
+   // while (1) 
+    { 
+	    scanf("%d %d", &prod_delay, &cons_delay); 
+	    printf ("\n\n\t\t\t\tP=%d C=%d\n\n\n", prod_delay, cons_delay);
+
+	//	printf("Sem %d length %d ,", full->name_val, lengthQ(&full->blocked_queue));
+	//	printf("Sem %d length %d ,", empty->name_val, lengthQ(&empty->blocked_queue));
+	//	printf("Sem %d length %d ,", mutex->name_val, lengthQ(&mutex->blocked_queue));
+
     };
 }
 

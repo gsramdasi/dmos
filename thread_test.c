@@ -74,7 +74,7 @@ void main(){
 	printf("Testing Semaphores - \n");	
 	
 	//Initialize semaphore with an initial value
-	my_sem = CreateSem(1);
+	my_sem = CreateSem(1, 0);
 	start_thread(inc_x);
 	start_thread(inc_y);
 	start_thread(inc_z);
