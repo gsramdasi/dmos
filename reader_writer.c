@@ -13,6 +13,7 @@ int reader_delay = 2,writer_delay = 2;
 
 void reader(void)
 {
+	int number = rand() % 10;	//REMOVE
 	int count = 10;
 
 	//reader enter
@@ -32,7 +33,9 @@ void reader(void)
 			V(mutex);
 
 		//read occurs here
-		printf("Reading from buffer: %d %d %d \n",buffer[0],buffer[1],buffer[2]);
+		printf("%d Reading from buffer: %d %d %d \n",number, buffer[0],buffer[1],buffer[2]);
+
+		yield();
 		
 		//Reader Exit
 		P(mutex);
@@ -50,6 +53,7 @@ void reader(void)
 void writer(void)
 {
 	int i, count = 10;
+	int num = rand() % 10; //REMOVE
 	
 	while(count--){
 		//Writer enter
@@ -67,7 +71,8 @@ void writer(void)
 		for(i = 0; i < 3; i++){
 			buffer[i] = rand() % 100;
 		}
-		printf("Writing to buffer: %d %d %d\n",buffer[0],buffer[1],buffer[2]);
+		printf("%d Writing to buffer: %d %d %d\n",num, buffer[0],buffer[1],buffer[2]);
+		yield();
 
 		//Writer Exit
 		P(mutex);
@@ -91,7 +96,10 @@ int main()
 
 	start_thread(writer);	
 	start_thread(reader);
-//	start_thread(writer);
+	start_thread(writer);
+	start_thread(reader);
+	start_thread(writer);
+	start_thread(reader);
 	run();
 
 	DEBUG;
