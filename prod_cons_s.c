@@ -39,34 +39,24 @@ void cons(void)
 }
 
 
-int main()
-{
-    int id[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+int main(){
+	int id[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
 	full = CreateSem(0, 0);
 	empty = CreateSem(N, 1);
 	mutex = CreateSem(1, 2);
 
-    start_thread(prod);
-    start_thread(cons);
-    start_thread(prod);
-    start_thread(cons);
-    start_thread(prod);
-    start_thread(cons);
-    start_thread(prod);
-    start_thread(cons);
+	start_thread(prod);
+	start_thread(cons);
+	start_thread(prod);
+	start_thread(cons);
+	start_thread(prod);
+	start_thread(cons);
+	start_thread(prod);
+	start_thread(cons);
+	
 	run();
 	DEBUG;
-   // while (1) 
-    { 
-	    scanf("%d %d", &prod_delay, &cons_delay); 
-	    printf ("\n\n\t\t\t\tP=%d C=%d\n\n\n", prod_delay, cons_delay);
-
-	//	printf("Sem %d length %d ,", full->name_val, lengthQ(&full->blocked_queue));
-	//	printf("Sem %d length %d ,", empty->name_val, lengthQ(&empty->blocked_queue));
-	//	printf("Sem %d length %d ,", mutex->name_val, lengthQ(&mutex->blocked_queue));
-
-    };
 }
 
 
