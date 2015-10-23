@@ -111,6 +111,8 @@ int SearchQ(TCB_t **Qp, TCB_t *query){
 	return 0;	//not found
 }
 
+#if 0
+//Find the size of the queue
 int lengthQ(TCB_t **Qp){
 	int count = 0;
 	TCB_t *temp = *Qp;
@@ -126,6 +128,6 @@ int lengthQ(TCB_t **Qp){
 
 	return count;
 }
-
+#endif
 
 

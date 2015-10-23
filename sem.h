@@ -7,20 +7,19 @@
  */
 
 typedef struct Semaphore{
-//	int name_val;	//REMOVE
 	int sem_ctr;
 	TCB_t *blocked_queue;
 }Semaphore_t;
 
-//REMOVE!!!!!!!!!!!!!!! nameVal argument, its just for testing
-Semaphore_t* CreateSem(int InputValue , int nameVal){
+//Struct for a semaphore
+Semaphore_t* CreateSem(int InputValue){
 	Semaphore_t *sem = (Semaphore_t*)malloc(sizeof(Semaphore_t));
 	sem->sem_ctr = InputValue;
-//	sem->name_val = nameVal;
 	sem->blocked_queue = NULL;
 	return sem;
 }
 
+//Function to lock the semaphore
 void P(Semaphore_t * sem){
 	TCB_t *blocked_task = NULL;
 	sem->sem_ctr--;
@@ -34,27 +33,25 @@ void P(Semaphore_t * sem){
 //			printf("Thread %d has been blocked\n", blocked_task->thread_id);
 		}
 		else{
-			printf("MAJOR ISSUE - You can officialy freak out!!!!!!\n");	
+			printf("TCB not found in RunQ\n");	
 		}
 
+		//Load the next context in the RunQ. 
 		if (RunQ != NULL)
 			swapcontext(&sem->blocked_queue->prev->context, &(RunQ->context));
 		else{
+			//If the runQ is empty, go back to the parent to exit
 			printf("Deadlock Encountered !\n");
 			printf("Press ENTER to continue to the parent thread\n");	
 			while(getchar() != '\n');	
 			clean_exit();
 		}
 
-
-
-
-
 	}
-
 }
 
 
+//Function to unlock the semaphore
 void V(Semaphore_t * sem){
 	TCB_t *unblocked_task;
 
@@ -62,10 +59,9 @@ void V(Semaphore_t * sem){
 	if (sem->sem_ctr <= 0){
 		unblocked_task = DelQ(&sem->blocked_queue);	//Prepare the earliest blocked task for unblocking
 //		printf("Thread %d has been unblocked\n", unblocked_task->thread_id);
-
+		
+		//Add a task from the semaphore queue to the runQ
 		AddQ(&RunQ, unblocked_task);
-
-//		yield();
 	}
 	yield();
 }

@@ -10,6 +10,7 @@ Semaphore_t *empty, *full, *mutex;
 int buffer[N];
 int in = 0, out = 0, item_num=0, prod_delay = 1, cons_delay = 1;
 
+//Function to produce values
 void prod (void)
 {
     while (1){ 
@@ -24,6 +25,7 @@ void prod (void)
     }
 }    
 
+//Function to consume values
 void cons(void)
 {
     while(1){
@@ -42,9 +44,9 @@ void cons(void)
 int main(){
 	int id[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-	full = CreateSem(0, 0);
-	empty = CreateSem(N, 1);
-	mutex = CreateSem(1, 2);
+	full = CreateSem(0);
+	empty = CreateSem(N);
+	mutex = CreateSem(1);
 
 	start_thread(prod);
 	start_thread(cons);
@@ -56,7 +58,6 @@ int main(){
 	start_thread(cons);
 	
 	run();
-	DEBUG;
 }
 
 
