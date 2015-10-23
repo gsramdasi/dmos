@@ -1,3 +1,13 @@
+/*
+ * Main Read Write test file
+ * 
+ * Members:
+ * Gaurav (1206467752)
+ * Menaka (1209301934)
+ * Amaresh (1207301416)
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "sem.h"

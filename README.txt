@@ -15,13 +15,16 @@ thread_test.c		:Contains the test code which tests the functionality
 makefile		:Generate the object file using this makefile
 sem.h			:Contains routines related to semaphores
 proc_cons.c		:Test code for procedure consumer problem, This code has been provided by the professor
-reader_writer.c		:Test code for reader writer problem.
+read_writs.c		:Test code for reader writer problem.
+read_write_s.c		:Modified test code of reader writer provided by the professor
 
 Steps to Execute:
 1. Unzip the folder.
 2. To test the procedure consumer problem run "make pc"
 	Execute the object file created using the command "./a.out"
-4. To test the reader writer problem run "make rw"
+3. To test the reader writer problem run "make rw"
+	Execute the object file created using the command "./a.out"
+4. To test the professors read write code run "gcc read_write_s.c"
 	Execute the object file created using the command "./a.out"
 
 Notes:

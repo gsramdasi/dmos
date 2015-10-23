@@ -1,5 +1,12 @@
-// (c) Partha Dasgupta 2009
-// permission to use and distribute granted.
+/*
+ * Producer Consumer test file - Modified version of the professors test code
+ * 
+ * Members:
+ * Gaurav (1206467752)
+ * Menaka (1209301934)
+ * Amaresh (1207301416)
+ *
+ */
 
 #include <stdio.h>
 #include <stdlib.h>

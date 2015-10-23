@@ -1,9 +1,9 @@
 
 rw: q.h TCB.h threads.h sem.h
-	gcc reader_writer.c
+	gcc read_write.c
 
 pc: q.h TCB.h threads.h sem.h
-	gcc prod_cons_s.c
+	gcc prod_cons.c
 
 clean:
 	rm a.out

@@ -1,5 +1,12 @@
-// (c) Partha Dasgupta 2009
-// permission to use and distribute granted.
+/*
+ * Modified version of professors read write test code
+ * 
+ * Members:
+ * Gaurav (1206467752)
+ * Menaka (1209301934)
+ * Amaresh (1207301416)
+ *
+ */
 
 #include <stdio.h>
 #include <string.h>
@@ -106,8 +113,8 @@ void writer(void)
 
 int main()
 {
-	wsem= CreateSem(0);
-	rsem = CreateSem(0);
+	w_sem= CreateSem(0);
+	r_sem = CreateSem(0);
 	mutex = CreateSem(1);
 
 	start_thread(writer);	
