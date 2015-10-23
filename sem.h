@@ -31,7 +31,7 @@ void P(Semaphore_t * sem){
 			//task is already blocked
 			blocked_task = DelQ(&RunQ);		//remove current task from RunQ and...
 			AddQ(&sem->blocked_queue, blocked_task);//....block it
-			printf("Thread %d has been blocked\n", blocked_task->thread_id);
+//			printf("Thread %d has been blocked\n", blocked_task->thread_id);
 		}
 		else{
 			printf("MAJOR ISSUE - You can officialy freak out!!!!!!\n");	
@@ -61,11 +61,12 @@ void V(Semaphore_t * sem){
 	sem->sem_ctr++;
 	if (sem->sem_ctr <= 0){
 		unblocked_task = DelQ(&sem->blocked_queue);	//Prepare the earliest blocked task for unblocking
-		printf("Thread %d has been unblocked\n", unblocked_task->thread_id);
+//		printf("Thread %d has been unblocked\n", unblocked_task->thread_id);
 
 		AddQ(&RunQ, unblocked_task);
 
-		yield();
+//		yield();
 	}
+	yield();
 }
 

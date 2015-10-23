@@ -35,7 +35,7 @@ void reader(void)
 		//read occurs here
 		printf("%d Reading from buffer: %d %d %d \n",number, buffer[0],buffer[1],buffer[2]);
 
-		yield();
+//		yield();
 		
 		//Reader Exit
 		P(mutex);
@@ -72,7 +72,7 @@ void writer(void)
 			buffer[i] = rand() % 100;
 		}
 		printf("%d Writing to buffer: %d %d %d\n",num, buffer[0],buffer[1],buffer[2]);
-		yield();
+//		yield();
 
 		//Writer Exit
 		P(mutex);
