@@ -40,6 +40,10 @@ void run(){
 
 }
 
+int get_thread_id(){
+	return RunQ->thread_id;
+}
+
 //Yields the current process. 
 void yield(){
 	ucontext_t *currentCtx = NULL;
