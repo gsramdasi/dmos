@@ -3,8 +3,7 @@
 #define N 10
 #define TOTAL_PORTS 100
 
-#define SEM_COUNT 100
-#define SHARE_COUNT 1
+#define SEM_COUNT 10
 
 typedef struct {
 	int message[10];
@@ -43,10 +42,10 @@ void init_ports(){
 	//Initialize the semaphores
 	init_semaphores();
 
-	for (i=0; i<TOTAL_PORTS; i++){
-		port[i].empty = empty[i];  //CreateSem(0);
-		port[i].full = full[i]; //CreateSem(N);
-		port[i].mutex = mutex[i]; //CreateSem(1);
+	for (i=0; i < TOTAL_PORTS; i++){
+		port[i].empty = empty[i % SEM_COUNT];  //CreateSem(0);
+		port[i].full = full[i % SEM_COUNT]; //CreateSem(N);
+		port[i].mutex = mutex[i % SEM_COUNT]; //CreateSem(1);
 		
 		port[i].recv_idx = port[i].send_idx = 0;
 	}
