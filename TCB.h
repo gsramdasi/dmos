@@ -22,7 +22,7 @@ static int global_id = 0;
 //   1. pointer to the function, to be executed
 //   2. pointer to the thread stack
 //   3. size of the stack
-void init_TCB(TCB_t *tcb, void *function, void *stackP, int stack_size){
+void init_TCB(TCB_t *tcb, void *function, int arg, void *stackP, int stack_size){
 	
 	memset(tcb, '\0', sizeof(TCB_t));       // wash, rinse
 
@@ -30,8 +30,8 @@ void init_TCB(TCB_t *tcb, void *function, void *stackP, int stack_size){
     tcb->context.uc_stack.ss_sp = stackP;
 	tcb->context.uc_stack.ss_size = (size_t) stack_size;
 	tcb->thread_id = global_id++;
-	
-	makecontext(&tcb->context, function, 0);// context is now cooked
+
+	makecontext(&tcb->context, function, 1, arg);// context is now cooked
 }
 
 

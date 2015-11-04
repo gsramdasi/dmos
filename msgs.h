@@ -1,29 +1,12 @@
-<<<<<<< HEAD
-#include <stdio.h>
-#include <stdlib.h>
-#include "sem.h"
-
-#define PORT_MESSEGE_COUNT 4
-
-typedef struct message_struct{
-	int data[10];
-}message;
-
-typedef struct port_struct{
-	message* msgQ;
-	Semaphore_t sem;
-}port;
-
-typedef struct set_struct{
-	port ports[100];
-}set;
-=======
 #include "sem.h"
 
 #define N 10
 #define TOTAL_PORTS 100
 
-typedef struct msgererer{
+#define SEM_COUNT 100
+#define SHARE_COUNT 1
+
+typedef struct {
 	int message[10];
 }message_t;
 
@@ -35,16 +18,35 @@ typedef struct {
 }port_t;
 
 port_t port[TOTAL_PORTS];
+
+Semaphore_t *empty[SEM_COUNT];
+Semaphore_t *full[SEM_COUNT];
+Semaphore_t *mutex[SEM_COUNT];
+
+void init_semaphores(){
+	int i;
+
+	for(i = 0; i < SEM_COUNT; i++){
+		empty[i] = CreateSem(0);
+	        full[i] = CreateSem(N);
+		mutex[i] = CreateSem(1);
+	}
+}
+
 void init_ports(){
 	/*
 	 * init semaphores
 	 * memset messages to 0s	-	Optional
 	 */
 	int i;
+
+	//Initialize the semaphores
+	init_semaphores();
+
 	for (i=0; i<TOTAL_PORTS; i++){
-		port[i].empty = CreateSem(0);
-		port[i].full = CreateSem(N);
-		port[i].mutex = CreateSem(1);
+		port[i].empty = empty[i];  //CreateSem(0);
+		port[i].full = full[i]; //CreateSem(N);
+		port[i].mutex = mutex[i]; //CreateSem(1);
 		
 		port[i].recv_idx = port[i].send_idx = 0;
 	}
@@ -71,7 +73,7 @@ int send (message_t msg, int port_nr){
 	
 	//may add len argument to function and compare with message_t size and memset only if less
 	P(port[port_nr].mutex);
-	memset(&port[port_nr].message[port[port_nr].send_idx], 0, sizeof(message_t));	//May be skipped
+	memset(&port[port_nr].message[port[port_nr].send_idx], 0, sizeof(message_t));	//Can be skipped
 	memcpy(&port[port_nr].message[port[port_nr].send_idx], &msg, sizeof(message_t));
 	
 	//update send(write) index
@@ -102,7 +104,7 @@ message_t receive (int port_nr){
 
 	//put message received from the sender into the respective port's message buffer
 	memcpy(&ready_msg, &port[port_nr].message[port[port_nr].recv_idx], sizeof(message_t));
-	memset(&port[port_nr].message[port[port_nr].recv_idx], 0, sizeof(message_t));	//May be skipped
+	memset(&port[port_nr].message[port[port_nr].recv_idx], 0, sizeof(message_t));	//Can be skipped
 
 	//update recv(read) index
 	port[port_nr].recv_idx = (++port[port_nr].recv_idx)%N;
@@ -116,4 +118,3 @@ message_t receive (int port_nr){
 	return ready_msg;
 }
 
->>>>>>> 8de337be34f694870a884f8eedb4a3a69c21b763

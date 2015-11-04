@@ -8,7 +8,7 @@
 #define STACK_SIZE 8192	//Macro for stack size
 
 //Function prototypes
-void start_thread(void (*function)(void));
+void start_thread(void (*function)(int), int arg);
 void run();
 void yield();
 void clean_exit();
@@ -16,10 +16,10 @@ void clean_exit();
 ucontext_t parent;
 TCB_t *RunQ = NULL;
 
-void start_thread(void (*function)(void)){ 
+void start_thread(void (*function)(int), int arg){ 
 	stack_t *stack = NULL;	
 	TCB_t *qNode = NULL;
-	
+
 	//allocate a stack (via malloc) of a certain size (choose 8192)
 	stack = (stack_t*)malloc(STACK_SIZE);
 
@@ -27,7 +27,7 @@ void start_thread(void (*function)(void)){
 	qNode = (TCB_t*)malloc(sizeof(TCB_t));
 
 	//call init_TCB with appropriate arguments
-	init_TCB(qNode, function, stack, STACK_SIZE);
+	init_TCB(qNode, function, arg, stack, STACK_SIZE);
 
 	//call addQ to add this TCB into the “RunQ” which is a global header pointer
 	AddQ(&RunQ, qNode);

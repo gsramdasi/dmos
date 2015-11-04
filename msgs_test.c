@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-#include <stdlib.h>
-#include <stdio.h>
-#include "msgs.h"
-
-void main(){
-
-
-
-
-=======
 /*
  * Test file for testing message passing - Strategy 2
  *
@@ -26,12 +15,13 @@ void main(){
 #define SENDERS 1
 #define RECEIVERS 5
 
-void sender(){
+void sender(int port){
 	message_t msg;
 	time_t time_seed;
 //	int dest_port=get_thread_id() % 2;	//distribute over 2 ports; any other logic could be used
 	int dest_port=1;
 	int i, ret;
+
 	while(1){
 		
 		//Bundle the message
@@ -56,11 +46,12 @@ void sender(){
 	}
 }
 
-void receiver(){
+void receiver(int port){
 	message_t  msg;
 	//int src_port=get_thread_id() % 2;	//to read over the 2 ports - one receiver on each port
 	int src_port=1;
 	int i;
+	
 	while(1){
 		//receive the message
 		msg = receive (src_port);
@@ -86,12 +77,11 @@ int main(){
 	init_ports();
 	
 	for (i=0 ; i<SENDERS ; i++)
-		start_thread(sender);
+		start_thread(sender, i);
 	for (i=0 ; i<RECEIVERS ; i++)
-		start_thread(receiver);
+		start_thread(receiver, i);
 
 	run();	//Let the give-and-take begin
 
 	return 0;
->>>>>>> 8de337be34f694870a884f8eedb4a3a69c21b763
 }
