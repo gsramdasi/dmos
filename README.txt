@@ -11,26 +11,19 @@ Files:
 q.h			:Contains all the queue handling functions. 
 TCB.h			:Contains the TCB structure used in RunQ
 threads.h		:Contains thread related functions, such as yielding, starting thread, exit
-thread_test.c		:Contains the test code which tests the functionality
 makefile		:Generate the object file using this makefile
 sem.h			:Contains routines related to semaphores
-proc_cons.c		:Test code for procedure consumer problem, This code has been provided by the professor
-read_writs.c		:Test code for reader writer problem.
-read_write_s.c		:Modified test code of reader writer provided by the professor
+msgs.h			:Contains the port functions such as send and recieve
+msgs_test.c		:Test code for the port functions
 
 Steps to Execute:
 1. Unzip the folder.
-2. To test the procedure consumer problem run "make pc"
-	Execute the object file created using the command "./a.out"
-3. To test the reader writer problem run "make rw"
-	Execute the object file created using the command "./a.out"
-4. To test the professors read write code run "gcc read_write_s.c"
+2. To test the messaging functionality run "make msgs"
 	Execute the object file created using the command "./a.out"
 
 Notes:
-1. The procedure consumer creates 4 threads each, the procedures write to different location in the buffer. 
-	And the consumer read from this buffer.
-2. The reader writer creates 3 threads each, The writer writes to the buffer, and each reader reads the entire buffer.
-	Writes write only after all the readers have read. 
-
+1. The code submitted uses strategy 3. But our code even supports strategy 2, 
+	we just need to change the macro value of SEM_COUNT (in msgs.h) to number of ports to get strategy 2. 
+2. We have modifed the thread functionality, now the start thread function doesnt just take the thread function pointer,
+	but also arguments to this thread function
 

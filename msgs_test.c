@@ -86,9 +86,9 @@ int main(){
 
 	//Create Sender and Receiver threads	
 	for (i=0 ; i<SENDERS ; i++)
-		start_thread(sender, 1);
+		start_thread(sender, (i % TOTAL_PORTS));
 	for (i=0 ; i<RECEIVERS ; i++)
-		start_thread(receiver, 1);
+		start_thread(receiver, (i % TOTAL_PORTS));
 
 	run();	//Let the give-and-take begin
 
