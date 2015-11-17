@@ -4,6 +4,7 @@
 #include "msgs.h"
 
 #define SERVER_PORT 10
+#define SERVER_SIZE 10
 
 typedef struct{
 	char data[200];
@@ -11,32 +12,43 @@ typedef struct{
 
 
 void server(int port){
-	server_data table[10];
+	server_data table[SERVER_SIZE];
+	int tStart, tEnd;
 	int size = 0;
 	message_t msg;
 	int temp;
 
-	DEBUG;
 
 	while(1){
 		msg = receive(port);
 
 		switch(msg.type){
 			case 1:
-				;
+				printf("Should add new message\n");
+				break;
+				
 			case 2:
-				;
+				printf("Should delete message\n");
+				break;
+				
 			case 3:
+				printf("Should modify message\n");
+				break;
+				
+			case 4:
 				//Print  table
-				temp = size;
-				if(temp != 0){
-					while(temp--){
+				temp = tStart;
+				if(tStart != tEnd){
+					while(temp != tEnd){
 						printf("%s, ", table[temp].data);
+						temp = ((temp + 1) % SERVER_SIZE);
 					}
 				}
 				else{
 					printf("Table is empty\n");
 				}
+
+				break;
 
 			default:
 				break;
@@ -48,15 +60,43 @@ void server(int port){
 
 void client(int id){
 	message_t msg;
+	int choice;
+	char dummy[200] = "test";
 
 	printf("Client thread %d starting\n", id);
 
 	if(id == 1 || id == 2){
+		//Add or delete
+		while(1){
+			choice = (rand() % 3); 
 
+			switch(choice){
+				case 1:
+					//add msg to server
+					msg.type = 1;
+					memcpy(msg.msgString, dummy, (sizeof(char) * 200));
+					send(msg, SERVER_PORT);
+					break;
+
+				case 2:
+					//delete msg from server
+					msg.type = 2;
+					send(msg, SERVER_PORT);
+					break;
+					
+				case 3:
+					//modify msg
+					msg.type = 3;
+					send(msg, SERVER_PORT);
+					break;
+			}
+
+			sleep(2);
+		}
 
 	}
 	else if(id == 3){
-		msg.type = 3;
+		msg.type = 4;
 		while(1){
 			send(msg, SERVER_PORT);
 			sleep((rand() % 10));	
@@ -81,8 +121,9 @@ void main(){
 	start_thread(server, SERVER_PORT);
 
 	//Create client
-	//	for (i = 0 ;i < 3;i++)
-	start_thread(client, 3);
+	for (i = 0 ;i < 3;i++)
+		start_thread(client, (i + 1));
+	//start_thread(client, 3);
 
 	run();  //Let the give-and-take begin
 
