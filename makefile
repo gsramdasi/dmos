@@ -1,3 +1,5 @@
+cl-srv:
+	gcc cl-srv.c
 
 msgs:
 	gcc msgs_test.c

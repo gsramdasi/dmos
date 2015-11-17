@@ -34,6 +34,8 @@ void start_thread(void (*function)(int), int arg){
 }
 
 void run(){
+	DEBUG;
+
 	//ucontext_t parent;     // get a place to store the main context, for faking
 	getcontext(&parent);   // magic sauce
 	swapcontext(&parent, &(RunQ->context));  // start the first thread

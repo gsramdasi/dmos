@@ -6,6 +6,7 @@
  * it won't be scheduled - hence it's not runnable
  */
 
+
 typedef struct Semaphore{
 	int sem_ctr;
 	TCB_t *blocked_queue;
@@ -23,7 +24,7 @@ Semaphore_t* CreateSem(int InputValue){
 void P(Semaphore_t * sem){
 	TCB_t *blocked_task = NULL;
 	sem->sem_ctr--;
-	
+
 	if (sem->sem_ctr < 0){
 		//block current thread
 		if (!SearchQ(&sem->blocked_queue, RunQ)){

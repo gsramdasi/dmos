@@ -19,6 +19,8 @@
 /* Message Structure */
 typedef struct {
 	int message[10];
+	int type;
+	char msgString[200];
 }message_t;
 
 /* Port Structure */
@@ -122,7 +124,7 @@ message_t receive (int port_nr){
 	 * V(recv_s)
 	 */
 	message_t ready_msg;
-
+	
 	//verify that the message buffer isn't empty
 	P(port[port_nr].empty);	
 	P(port[port_nr].mutex);
