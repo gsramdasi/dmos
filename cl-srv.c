@@ -24,11 +24,14 @@ void server(int port){
 
 		switch(msg.type){
 			case 1:
-				printf("Should add new message\n");
+				printf("Added message - %s\n", msg.msgString);
+				memcpy(table[tEnd].data, msg.msgString, (sizeof(char) * 200));
+				tEnd = (++tEnd) % SERVER_SIZE;
 				break;
 				
 			case 2:
-				printf("Should delete message\n");
+				printf("Deleted message - %s\n", table[tStart].data);
+				tStart = (++tStart) % SERVER_SIZE;
 				break;
 				
 			case 3:
@@ -39,10 +42,12 @@ void server(int port){
 				//Print  table
 				temp = tStart;
 				if(tStart != tEnd){
+					printf("Printing List - ");
 					while(temp != tEnd){
 						printf("%s, ", table[temp].data);
 						temp = ((temp + 1) % SERVER_SIZE);
 					}
+					printf("\n");
 				}
 				else{
 					printf("Table is empty\n");
@@ -91,7 +96,7 @@ void client(int id){
 					break;
 			}
 
-			sleep(2);
+			sleep(1);
 		}
 
 	}
@@ -99,7 +104,7 @@ void client(int id){
 		msg.type = 4;
 		while(1){
 			send(msg, SERVER_PORT);
-			sleep((rand() % 10));	
+			sleep((rand() % 5));	
 		}
 	}
 	else{
