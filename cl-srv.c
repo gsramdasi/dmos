@@ -16,16 +16,20 @@ void server(int port){
 	int tStart, tEnd;
 	int size = 0;
 	message_t msg;
-	int temp;
+	int temp, i;
 
 
 	while(1){
 		msg = receive(port);
 
-		switch(msg.type){
+		switch(msg.message[0]){
 			case 1:
-				printf("Added message - %s\n", msg.msgString);
-				memcpy(table[tEnd].data, msg.msgString, (sizeof(char) * 200));
+				printf("Added message\n");
+
+				//memcpy(table[tEnd].data, msg.msgString, (sizeof(char) * 200));
+				for(i = 0; i < 9; i++)
+					table[tEnd].data[i] = msg.message[i + 1];
+
 				tEnd = (++tEnd) % SERVER_SIZE;
 				break;
 				
@@ -65,8 +69,9 @@ void server(int port){
 
 void client(int id){
 	message_t msg;
-	int choice;
+	int choice, i;
 	char dummy[200] = "test";
+	int dummySize = 5;
 
 	printf("Client thread %d starting\n", id);
 
@@ -78,20 +83,24 @@ void client(int id){
 			switch(choice){
 				case 1:
 					//add msg to server
-					msg.type = 1;
-					memcpy(msg.msgString, dummy, (sizeof(char) * 200));
+					msg.message[0] = 1;
+					memset(&msg.message[1], 0x00, (sizeof(int) * 9));
+					
+					for(i = 0; i < dummySize; i++)
+						msg.message[i + 1] = (int) dummy[i];
+					
 					send(msg, SERVER_PORT);
 					break;
 
 				case 2:
 					//delete msg from server
-					msg.type = 2;
+					msg.message[0] = 2;
 					send(msg, SERVER_PORT);
 					break;
 					
 				case 3:
 					//modify msg
-					msg.type = 3;
+					msg.message[0] = 3;
 					send(msg, SERVER_PORT);
 					break;
 			}
@@ -101,7 +110,7 @@ void client(int id){
 
 	}
 	else if(id == 3){
-		msg.type = 4;
+		msg.message[0] = 4;
 		while(1){
 			send(msg, SERVER_PORT);
 			sleep((rand() % 5));	
@@ -128,7 +137,6 @@ void main(){
 	//Create client
 	for (i = 0 ;i < 3;i++)
 		start_thread(client, (i + 1));
-	//start_thread(client, 3);
 
 	run();  //Let the give-and-take begin
 

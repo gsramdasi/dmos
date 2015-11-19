@@ -19,8 +19,6 @@
 /* Message Structure */
 typedef struct {
 	int message[10];
-	int type;
-	char msgString[200];
 }message_t;
 
 /* Port Structure */
