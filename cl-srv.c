@@ -42,6 +42,25 @@ void initialize_server_data(server_data *data){
 	return;
 }
 
+//Generates a random string
+//Max string size is 100 
+int random_string(char *string){
+	int i;
+	time_t time_seed;
+	char alphabets[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	int length = sizeof(alphabets);
+	int strLength = rand() % 100;
+
+	for (i = 0; i < strLength; i++) {
+		string[i] = alphabets[rand() % (length - 1)];
+	}
+
+	string[strLength] = '\0';
+
+	//Return size of string
+	return strLength;
+}
+
 message_t add(server_data *table, message_t clientMsg){
 	message_t returnMsg;
 
@@ -142,22 +161,19 @@ void server(int port){
 	//Initialize the server table
 	initialize_server(table);
 
-//used for testing print
+	//used for testing print
 #if 0
 	//TODO : Remove, only for testing
-	memcpy(table[0].data, "amaresh amaresh amaresh", 24);
+	table[0].size = random_string(table[0].data);
 	table[0].flag = FULL;
-	table[0].size = 24;
 	table[0].clientId = 1;
 
-	memcpy(table[1].data, "gaurav", 7);
+	table[1].size = random_string(table[1].data);
 	table[1].flag = FULL;
-	table[1].size = 7;
 	table[1].clientId = 1;
-	
-	memcpy(table[2].data, "menaka", 7);
+
+	table[2].size = random_string(table[2].data);
 	table[2].flag = FULL;
-	table[2].size = 7;
 	table[2].clientId = 1;
 #endif
 
@@ -294,7 +310,7 @@ void clientPrint(int id){
 
 			//Receive chunk data from server
 			returnMsg = receive(id);
-	
+
 			//Store the received data in char
 			for(i = 0; i < 9; i++){
 				printData[printDataReceived] = returnMsg.message[i + 1];
@@ -326,8 +342,8 @@ void main(){
 	start_thread(server, SERVER_PORT);
 
 	//Create client
-//	start_thread(client, 1);
-//	start_thread(client, 2);
+	//	start_thread(client, 1);
+	//	start_thread(client, 2);
 
 	//Client to print
 	start_thread(clientPrint, 3);
