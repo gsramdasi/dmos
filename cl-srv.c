@@ -18,15 +18,19 @@
 #define DELETE		2
 #define MODIFY		3
 #define PRINT		4
-#define CONTINUED	5
+#define CONTINUED	-1
+
+#define MIN(x,y) (x)<(y)?(x):(y)
 
 //Structures
 typedef struct{
 	char data[200];
 	int size;
 	int flag;
-	int clientId;
+	int client_id;
 }server_data;
+
+server_data table[SERVER_SIZE];	//table of 10 entries; may be maintained local to the server function 
 
 //Global Variables
 int printData[2000];
@@ -36,10 +40,18 @@ int printDataSize;
 void initialize_server_data(server_data *data){
 	data->size = 0;
 	data->flag = EMPTY;
-	data->clientId = -1;	
-	memset(data->data, 0, (sizeof(char) * 200));
+	data->client_id = -1;	
+	memset(data->data, '\0', (sizeof(char) * 200));
 
 	return;
+}
+
+//Initialize the server table
+void initialize_server(server_data *table){
+	int i;
+
+	for(i = 0; i < SERVER_SIZE; i++)
+		initialize_server_data(&table[i]);
 }
 
 //Generates a random string
@@ -47,12 +59,13 @@ void initialize_server_data(server_data *data){
 int random_string(char *string){
 	int i;
 	time_t time_seed;
-	char alphabets[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	int length = sizeof(alphabets);
-	int strLength = rand() % 100;
+	char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	int length = sizeof(alphabet);
+	srand((unsigned) time(&time_seed));
+	int strLength = (rand() % 100)+1;	//TODO add srand before each rand and use teh time_seed
 
 	for (i = 0; i < strLength; i++) {
-		string[i] = alphabets[rand() % (length - 1)];
+		string[i] = alphabet[rand() % (length - 1)];
 	}
 
 	string[strLength] = '\0';
@@ -61,10 +74,156 @@ int random_string(char *string){
 	return strLength;
 }
 
-message_t add(server_data *table, message_t clientMsg){
-	message_t returnMsg;
+//find a free spot in the table; return -1 for no free entry
+int find_free_entry(){
+	int i=0;
 
-	return returnMsg;
+	for (i=0;i<SERVER_SIZE;i++){
+		if (table[i].flag == EMPTY)
+			return i;
+	}
+	return -1;
+}
+
+//add command from the client
+int add_from_client(const char *in_string, int port_nr){
+	int i=0, ret, elems;
+	int s_id=1; 	//session id: will be used for messages 
+	int len = strlen(in_string);
+	int in_string_idx = 0;
+	message_t packet, response;
+DEBUG
+	printf("Length = %d\n", len);
+	while(len > 0){
+		//break in_string and keep sending messages with appropriate headers
+		//Add headers - idx 0 and 1
+		packet.message[0] = ADD;
+		if (len <= 8)	//data segment of each packet is 8 integers long
+			packet.message[0] *= -1;	//send negative command to signify last packet
+
+		if (s_id>0)
+			packet.message[1] = port_nr; /*client's port or session id*/
+		else
+			packet.message[1] = s_id;
+
+DEBUG
+		//start adding message
+		printf("MIN : %d\n", MIN(len,8));
+		elems = MIN(len,8);
+		for (i=0; i<elems; i++){
+			packet.message[i+2] = (int)in_string[in_string_idx++];
+		DEBUG
+			printf("%c", (char)packet.message[i+2]);
+			printf("\n%d\n",i);
+		}
+
+DEBUG
+		//send packet
+		for(i=0;i<2;i++)
+			printf("%d,", packet.message[i]);
+
+		for(i=2;i<10;i++)
+			printf("%c,", packet.message[i]);
+		printf("\n");
+		ret = send(packet, SERVER_PORT);
+DEBUG
+		//recv server's response and update session id
+		response = receive (port_nr);
+		s_id = response.message[1];
+
+		len-=8;
+	}
+	//add s_id to a global list. this will be used for deletions and modifications
+
+}
+
+//add at the server
+message_t add_at_server(server_data *table, message_t clientMsg){
+	message_t ack;
+	int client_port, elements;
+	int i, table_idx, ret;
+	int *index;
+	DEBUG
+		if (clientMsg.message[1] >= 0){	//first time here
+		/*
+		 * - Extract the port number from idx 1 and store it locally
+		 * - TODO If the entry exists, return with FAILURE
+		 * - Set the flags appropriately for the table entry and free the data if NULL
+		 *   	> flag = INCOMPLETE
+		 *   	> client_id = port number (optional)
+		 * - Extract the message and copy to data using size as the index
+		 * - If last message, change flag
+		 *   	> Identified by if clientMsg[0] is negative for last message
+		 *   	> Or add a length of message element to the first message
+		 * - Create and send the Ack message - |ADD|S_ID|<blank>|
+		 *   Note : S_ID could be used as negative of tabe entry number, so CONTINUED wont b needed
+		 */
+
+		client_port = clientMsg.message[1];
+		table_idx = find_free_entry();
+		printf("idx = %d\n", table_idx);
+		if (table_idx <0)
+			return;	//There is no free table entry
+DEBUG
+		table[table_idx].flag = INCOMPLETE;
+		table[table_idx].client_id = client_port;
+		index = &table[table_idx].size;
+		//since this is the first time, no need to check for buf overflow
+		for (i=0; i<8; i++){	//TODO Change upper limit to accomiodate smaller packet sizes
+			table[table_idx].data[(*index)++] = (char)clientMsg.message[i+2];
+			printf("char recvd : %c\n", table[table_idx].data[(*index)++]); 
+			if (table[table_idx].data[(*index)++] == '\0')
+				break;
+		}
+
+		//mark entry FULL if last
+		if (clientMsg.message[0] < 0){
+			table[table_idx].data[(*index)] = (char)'\0';	//not needed really
+			table[table_idx].flag = FULL;
+		}
+
+	}
+	else {/*if (clientMsg[1] <= 0)*/
+		/*
+		 * - Extract the session id from idx 1
+		 * - See whether the table entry is marked INCOMPLETE, if not, return w/ FAILURE
+		 * - Get the size from the table structure, which is also the last index value
+		 * - Parse the message to see if the message is the last message
+		 *   	> TODO How? Maybe assuming null terminated string and look for ascii of null
+		 * - Write message from this point checking for buffer overflow
+		 * - Create and send Ack message - |CONTINUED|S_ID|<blank>
+		 */
+DEBUG
+		table_idx = (-1) * clientMsg.message[1];
+		client_port = table[table_idx].client_id;
+		
+		if (table[table_idx].flag != INCOMPLETE){
+			return ;	//Not in a position to continue writing
+		}
+
+		index = &table[table_idx].size;
+		
+		for (i=0; i<8; i++){	//TODO Change upper limit to accomiodate smaller packet sizes
+			table[table_idx].data[(*index)++] = (char)clientMsg.message[i+2];
+			if (table[table_idx].data[(*index)++] == '\0'){
+				break;
+			}
+		}
+
+		//mark entry FULL if last
+		if (clientMsg.message[0] < 0){
+			table[table_idx].data[(*index)] = (char)'\0';	//not needed really
+			table[table_idx].flag = FULL;
+		}
+		
+		printf("Message till now is : %s\n", table[table_idx].data);
+	}
+DEBUG
+	ack.message[0] = ADD;
+	ack.message[1] = (-1 * table_idx);
+	ret = send (ack, client_port);
+
+	//	return returnMsg;
 }
 
 message_t delete(server_data *table, message_t clientMsg){
@@ -142,16 +301,9 @@ message_t continued(server_data *table, message_t clientMsg){
 }
 
 
-//Initialize the server table
-void initialize_server(server_data *table){
-	int i;
-
-	for(i = 0; i < SERVER_SIZE; i++)
-		initialize_server_data(&table[i]);
-}
 
 void server(int port){
-	server_data table[SERVER_SIZE];
+//	server_data table[SERVER_SIZE];
 	int tStart, tEnd;
 	int size = 0;
 	message_t msg;
@@ -177,13 +329,14 @@ void server(int port){
 	table[2].clientId = 1;
 #endif
 
-
+DEBUG
 	while(1){
 		msg = receive(port);
-
-		switch(msg.message[0]){
+printf("case is %d\n", abs(msg.message[0]));
+		switch(abs(msg.message[0])){
 			case ADD:
-				add(table, msg);
+				add_at_server(table, msg);
+				DEBUG
 
 #if 0
 				printf("Added message\n");
@@ -215,10 +368,6 @@ void server(int port){
 				send(returnMsg, msg.message[1]);
 				break;
 
-			case CONTINUED:
-				//Contiued Case
-				continued(table, msg);
-
 			default:
 				break;
 		}
@@ -229,19 +378,24 @@ void server(int port){
 
 void client(int id){
 	message_t msg;
-	int choice, i;
-	char dummy[200] = "test";
-	int dummySize = 5;
+	int choice, i, ret;
+	char dummy[200];
 
+	ret = random_string (dummy);
 	printf("Client thread %d starting\n", id);
 
 	if(id == 1 || id == 2){
 		//Add or delete
 		while(1){
-			choice = (rand() % 3); 
+//			choice = (rand() % 3); 
+			choice = ADD;			
 
 			switch(choice){
 				case ADD:
+					printf("%s\n", dummy);
+					DEBUG
+					add_from_client(dummy, id);
+					DEBUG
 #if 0
 					//add msg to server
 					msg.message[0] = ADD;
@@ -288,7 +442,6 @@ void clientPrint(int id){
 	char printData[2000];
 	int printDataReceived = 0;
 	int lastBlock, i;
-
 
 	while(1){
 		lastBlock = 1;
@@ -342,8 +495,8 @@ void main(){
 	start_thread(server, SERVER_PORT);
 
 	//Create client
-	//	start_thread(client, 1);
-	//	start_thread(client, 2);
+	start_thread(client, 1);
+//	start_thread(client, 2);
 
 	//Client to print
 	start_thread(clientPrint, 3);
