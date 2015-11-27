@@ -59,6 +59,7 @@ int random_string(char *string){
 	time_t time_seed;
 	char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 	int length = sizeof(alphabet);
+
 	srand((unsigned) time(&time_seed));
 	int strLength = (rand() % 100)+1;	//TODO add srand before each rand and use teh time_seed
 
@@ -90,8 +91,8 @@ int add_from_client(const char *in_string, int port_nr){
 	int len = strlen(in_string);
 	int in_string_idx = 0;
 	message_t packet, response;
-	
-//	printf("Length = %d\n", len);
+
+	//	printf("Length = %d\n", len);
 	while(len > 0){
 		//break in_string and keep sending messages with appropriate headers
 		//Add headers - idx 0 and 1
@@ -113,7 +114,7 @@ int add_from_client(const char *in_string, int port_nr){
 		}
 
 		ret = send(packet, SERVER_PORT);
-		
+
 		//recv server's response and update session id
 		response = receive (port_nr);
 		s_id = response.message[1];
@@ -129,7 +130,7 @@ message_t add_at_server(server_data *table, message_t clientMsg){
 	message_t ack;
 	int client_port, elements;
 	int i, table_idx, ret;
-		
+
 	if (clientMsg.message[1] > 0){	//first time here
 		/*
 		 * - Extract the port number from idx 1 and store it locally
@@ -146,12 +147,14 @@ message_t add_at_server(server_data *table, message_t clientMsg){
 		 */
 
 		client_port = clientMsg.message[1];
-		
+
 		table_idx = find_free_entry(table);
 		//printf("idx = %d\n", table_idx);
 		if (table_idx < 0)
 			return;	//There is no free table entry
-		
+
+		printf("Server Add Initiated\n");
+
 		table[table_idx].flag = INCOMPLETE;
 		table[table_idx].client_id = client_port;
 
@@ -163,7 +166,7 @@ message_t add_at_server(server_data *table, message_t clientMsg){
 				table[table_idx].flag = FULL;
 				break;
 			}
-			
+
 			table[table_idx].size++;
 		}
 
@@ -180,7 +183,7 @@ message_t add_at_server(server_data *table, message_t clientMsg){
 		 */
 		table_idx = (-1) * clientMsg.message[1];
 		client_port = table[table_idx].client_id;
-		
+
 		if (table[table_idx].flag != INCOMPLETE){
 			return ;	//Not in a position to continue writing
 		}
@@ -203,9 +206,22 @@ message_t add_at_server(server_data *table, message_t clientMsg){
 	ret = send (ack, client_port);
 }
 
+//Function to delete table entry at the server
 message_t delete(server_data *table, message_t clientMsg){
 	message_t returnMsg;
+	int sessionId = abs(clientMsg.message[1]);
+	int client_id = clientMsg.message[2];
 
+	if((table[sessionId].client_id == client_id) && (table[sessionId].flag == FULL)){
+		initialize_server_data(&table[sessionId]);
+		printf("Data deleted at %d\n", sessionId);
+		returnMsg.message[1] = SUCCESS;
+	}
+	else{
+		returnMsg.message[1] = FAILURE;
+	}
+
+	returnMsg.message[0] = clientMsg.message[1];
 	return returnMsg;
 }
 
@@ -291,17 +307,18 @@ void server(int port){
 	//Initialize the server table
 	initialize_server(table);
 
-//DEBUG
+	//DEBUG
 	while(1){
 		msg = receive(port);
-	//	printf("case is %d\n", abs(msg.message[0]));
+		//	printf("case is %d\n", abs(msg.message[0]));
 		switch(abs(msg.message[0])){
 			case ADD:
 				add_at_server(table, msg);
 				break;
 
 			case DELETE:
-				delete(table, msg);
+				returnMsg = delete(table, msg);
+				send(returnMsg, msg.message[2]);
 				break;
 
 			case MODIFY:
@@ -311,7 +328,6 @@ void server(int port){
 			case PRINT:
 				//Print  table
 				returnMsg = print(table, msg);
-
 				send(returnMsg, msg.message[1]);
 				break;
 
@@ -324,9 +340,11 @@ void server(int port){
 }
 
 void client(int id){
-	message_t msg;
+	message_t msg, returnMsg;
+	int sessionId;
 	int choice, i, ret;
-	char dummy[200];
+	char dummy[200] = "test";
+	int dummySize = 5;
 
 	ret = random_string (dummy);
 	printf("Client thread %d starting\n", id);
@@ -334,8 +352,8 @@ void client(int id){
 	if(id == 1 || id == 2){
 		//Add or delete
 		while(1){
-//			choice = (rand() % 3); 
-			choice = ADD;			
+			choice = (rand() % 3); 
+			//	choice = ADD;			
 
 			switch(choice){
 				case ADD:
@@ -343,13 +361,27 @@ void client(int id){
 					break;
 
 				case DELETE:
+					sessionId = 0; //TODO: pick a session id
+					msg.message[0] = DELETE;
+					msg.message[1] = sessionId;
+					msg.message[2] = id;
+
+					//Send the message to server and get back its response
+					send(msg, SERVER_PORT);
+					returnMsg = receive(id);
+
+					//Delete from local add table on success
+					if(returnMsg.message[1] == SUCCESS){
+						//TODO: Delete from local table
+					}
+
 					break;
 
 				case MODIFY:
 					break;
 			}
 
-			sleep(1);
+			//sleep(1);
 		}
 
 	}
@@ -365,9 +397,10 @@ void clientPrint(int id){
 	message_t msg, returnMsg;
 	char printData[2000];
 	int printDataReceived = 0;
-	int lastBlock, i;
+	int lastBlock, i, sleepTime;
 
 	while(1){
+		sleepTime = 5;
 		lastBlock = 1;
 		printDataReceived = 0;
 
@@ -406,8 +439,13 @@ void clientPrint(int id){
 		else{
 			printf("Server Data : Empty\n");
 		}
+
 		//Change sleep
-		sleep(2);
+		//sleep(2);
+		while(sleepTime > 0){
+			yield();
+			sleepTime--;
+		}
 	}
 }
 
@@ -424,7 +462,7 @@ void main(){
 
 	//Create client
 	start_thread(client, 1);
-//	start_thread(client, 2);
+	//	start_thread(client, 2);
 
 	//Client to print
 	start_thread(clientPrint, 3);
