@@ -16,7 +16,7 @@
 
 #define ADD		1
 #define DELETE		2
-#define MODIFY		3
+#define MODIFY		10	//modify case will include the entry too. Hence starts from 10
 #define PRINT		4
 #define CONTINUED	-1
 
@@ -62,7 +62,7 @@ int random_string(char *string){
 
 	srand((unsigned) time(&time_seed));
 	int strLength = (rand() % 100)+1;	//TODO add srand before each rand and use teh time_seed
-
+	
 	for (i = 0; i < strLength; i++) {
 		string[i] = alphabet[rand() % (length - 1)];
 	}
@@ -147,7 +147,8 @@ message_t add_at_server(server_data *table, message_t clientMsg){
 		 */
 
 		client_port = clientMsg.message[1];
-
+		
+		//Find an empty entry
 		table_idx = find_free_entry(table);
 		//printf("idx = %d\n", table_idx);
 		if (table_idx < 0)
@@ -188,7 +189,7 @@ message_t add_at_server(server_data *table, message_t clientMsg){
 			return ;	//Not in a position to continue writing
 		}
 
-		for (i=0; i<8; i++){	//TODO Change upper limit to accomiodate smaller packet sizes
+		for (i=0; i<8; i++){	
 			table[table_idx].data[table[table_idx].size] = (char)clientMsg.message[i+2];
 			if (table[table_idx].data[table[table_idx].size] == '\0'){
 				printf("Server : Msg completely recieved\n");
@@ -201,7 +202,7 @@ message_t add_at_server(server_data *table, message_t clientMsg){
 
 	//printf("Message till now is : %s, %d\n", table[table_idx].data, table[table_idx].size);
 
-	ack.message[0] = ADD;
+	ack.message[0] = (abs(clientMsg.message[0]))>10?MODIFY:ADD;
 	ack.message[1] = (-1 * table_idx);
 	ret = send (ack, client_port);
 }
@@ -225,10 +226,51 @@ message_t delete(server_data *table, message_t clientMsg){
 	return returnMsg;
 }
 
-message_t modify(server_data *table, message_t clientMsg){
-	message_t returnMsg;
 
-	return returnMsg;
+//modify command from the client
+int modify_from_client(const char *in_string, int entry, int port_nr){
+	int i=0, ret, elems;
+	int entry_exists=FAILURE; 	//session id: will be used for messages 
+	int len = strlen(in_string);
+	int in_string_idx = 0;
+	message_t packet, response;
+
+	//	printf("Length = %d\n", len);
+	while(len > 0){
+		//break in_string and keep sending messages with appropriate headers
+		//Add headers - idx 0 and 1
+		memset(packet.message, 0, sizeof(int) * 10);
+		packet.message[0] = MODIFY;
+		packet.message[0] += entry;	//the server subtracts 10 from abs to get the entry to be deleted
+		if (len <= 8)	//data segment of each packet is 8 integers long
+			packet.message[0] *= -1;	//send negative command to signify last packet
+
+		if (entry_exists>0)
+			packet.message[1] = port_nr; /*client's port or session id*/
+		else
+			packet.message[1] = entry_exists;
+
+		//start adding message
+		//printf("MIN : %d ", MIN(len,8));
+		elems = MIN(len,8);
+		for (i=0; i<elems; i++){
+			packet.message[i+2] = (int)in_string[in_string_idx++];
+		}
+
+		ret = send(packet, SERVER_PORT);
+
+		//recv server's response and update session id
+		response = receive (port_nr);
+		entry_exists = response.message[1];
+		
+		if (entry_exists == FAILURE)
+			return FAILURE;	//entry doen't exist
+
+		len-=8;
+
+		sleep(1);
+	}
+	return SUCCESS;
 }
 
 //Populates printData variable
@@ -288,21 +330,13 @@ message_t print(server_data *table, message_t clientMsg){
 	return returnMsg;
 }
 
-message_t continued(server_data *table, message_t clientMsg){
-	message_t returnMsg;
-
-	return returnMsg;
-}
-
-
-
 void server(int port){
 	server_data table[SERVER_SIZE];
 	int tStart, tEnd;
 	int size = 0;
 	message_t msg;
 	message_t returnMsg;
-	int temp, i;
+	int temp, i, entry;
 
 	//Initialize the server table
 	initialize_server(table);
@@ -321,17 +355,29 @@ void server(int port){
 				send(returnMsg, msg.message[2]);
 				break;
 
-			case MODIFY:
-				modify(table, msg);
-				break;
-
 			case PRINT:
 				//Print  table
 				returnMsg = print(table, msg);
 				send(returnMsg, msg.message[1]);
 				break;
 
-			default:
+			default:	
+				if (abs(msg.message[0]) >= 10){	//MODIFY
+					entry = abs(msg.message[0]) - 10;
+					if (table[entry].flag == EMPTY){
+						//entry cannot be deleted, Create corresponding ack and send
+						returnMsg.message[0] = MODIFY;
+						returnMsg.message[1] = FAILURE;
+						send(returnMsg, msg.message[1]);
+						break;
+					}
+
+					//Not full, so delete and start adding
+					returnMsg = delete(table, msg);
+					add_at_server(table, msg);
+
+
+				}
 				break;
 		}
 	}
@@ -355,13 +401,14 @@ void client(int id){
 			choice = (rand() % 3); 
 			//	choice = ADD;			
 
+			ret = random_string (dummy);
 			switch(choice){
 				case ADD:
 					add_from_client(dummy, id);
 					break;
 
 				case DELETE:
-					sessionId = 0; //TODO: pick a session id
+					sessionId = rand()%10; /*0; //TODO: pick a session id*/
 					msg.message[0] = DELETE;
 					msg.message[1] = sessionId;
 					msg.message[2] = id;
@@ -378,6 +425,7 @@ void client(int id){
 					break;
 
 				case MODIFY:
+					modify_from_client(dummy, 0/*rand()%10*/, id);
 					break;
 			}
 
