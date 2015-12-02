@@ -236,16 +236,18 @@ int modify_from_client(const char *in_string, int port_nr, int s_id){
 	int in_string_idx = 0;
 	message_t packet, response;
 
+						DEBUG;
 	//	printf("Length = %d\n", len);
 	while(len > 0){
 		//break in_string and keep sending messages with appropriate headers
 		//Add headers - idx 0 and 1
 		memset(packet.message, 0, sizeof(int) * 10);
 		packet.message[0] = MODIFY;
+						DEBUG;
 		if (len <= 8)	//data segment of each packet is 8 integers long
 			packet.message[0] *= -1;	//send negative command to signify last packet
 
-		packet.message[1] = -1 * s_id;
+		packet.message[1] =  s_id;
 
 		//start adding message
 		//printf("MIN : %d ", MIN(len,8));
@@ -258,7 +260,7 @@ int modify_from_client(const char *in_string, int port_nr, int s_id){
 
 		//recv server's response and update session id
 		response = receive (port_nr);
-		s_id = response.message[1];
+		//		s_id = response.message[1];
 
 		len-=8;
 
@@ -395,6 +397,7 @@ void client(int id){
 
 				case DELETE:
 					sessionId = rand()%10; /*0; //TODO: pick a session id*/
+					sessionId = -1 * sessionId;
 					msg.message[0] = DELETE;
 					msg.message[1] = sessionId;
 					msg.message[2] = id;
@@ -413,6 +416,7 @@ void client(int id){
 				case MODIFY:
 					//First Delete
 					sessionId = rand()%1; /*0; //TODO: pick a session id*/
+					sessionId = -1 * sessionId;
 					msg.message[0] = DELETE;
 					msg.message[1] = sessionId;
 					msg.message[2] = id;
@@ -422,10 +426,9 @@ void client(int id){
 					returnMsg = receive(id);
 
 					if(returnMsg.message[1] == SUCCESS){
-						printf("Here\n");
 						DEBUG;
 						//add to the server at the specified entry
-						modify_from_client(dummy, id, (-1 * sessionId));
+						modify_from_client(dummy, id, sessionId);
 						printf("Modified Entry %d\n", abs(sessionId));
 					}
 					else{
