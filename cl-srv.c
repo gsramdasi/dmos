@@ -126,7 +126,7 @@ int add_from_client(const char *in_string, int port_nr){
 }
 
 //add at the server
-message_t add_at_server(server_data *table, message_t clientMsg){
+message_t add_at_server(server_data *table, message_t clientMsg, int pos){
 	message_t ack;
 	int client_port, elements;
 	int i, table_idx, ret;
@@ -149,7 +149,10 @@ message_t add_at_server(server_data *table, message_t clientMsg){
 		client_port = clientMsg.message[1];
 		
 		//Find an empty entry
-		table_idx = find_free_entry(table);
+		if(pos < 0)
+			table_idx = find_free_entry(table);
+		else
+			table_idx = pos;
 		//printf("idx = %d\n", table_idx);
 		if (table_idx < 0)
 			return;	//There is no free table entry
@@ -235,7 +238,7 @@ int modify_from_client(const char *in_string, int entry, int port_nr){
 	int in_string_idx = 0;
 	message_t packet, response;
 
-	//	printf("Length = %d\n", len);
+	printf("Modifying Entry %d to %s\n", entry, in_string);
 	while(len > 0){
 		//break in_string and keep sending messages with appropriate headers
 		//Add headers - idx 0 and 1
@@ -263,8 +266,11 @@ int modify_from_client(const char *in_string, int entry, int port_nr){
 		response = receive (port_nr);
 		entry_exists = response.message[1];
 		
-		if (entry_exists == FAILURE)
-			return FAILURE;	//entry doen't exist
+		if (entry_exists == FAILURE){
+			printf("Entry number %d cannot be modified currently\n", entry);
+			return FAILURE;	//Completed entry doesn't exist
+			
+		}
 
 		len-=8;
 
@@ -347,7 +353,7 @@ void server(int port){
 		//	printf("case is %d\n", abs(msg.message[0]));
 		switch(abs(msg.message[0])){
 			case ADD:
-				add_at_server(table, msg);
+				add_at_server(table, msg, -1);
 				break;
 
 			case DELETE:
@@ -374,7 +380,7 @@ void server(int port){
 
 					//Not full, so delete and start adding
 					returnMsg = delete(table, msg);
-					add_at_server(table, msg);
+					add_at_server(table, msg, entry);
 
 
 				}
@@ -398,16 +404,16 @@ void client(int id){
 	if(id == 1 || id == 2){
 		//Add or delete
 		while(1){
-			choice = (rand() % 3); 
+			choice = (rand() % 3)+1; 
 			//	choice = ADD;			
 
 			ret = random_string (dummy);
 			switch(choice){
-				case ADD:
+				case 1:	/*ADD*/
 					add_from_client(dummy, id);
 					break;
 
-				case DELETE:
+				case 2: /*DELETE*/
 					sessionId = rand()%10; /*0; //TODO: pick a session id*/
 					msg.message[0] = DELETE;
 					msg.message[1] = sessionId;
@@ -424,12 +430,12 @@ void client(int id){
 
 					break;
 
-				case MODIFY:
-					modify_from_client(dummy, 0/*rand()%10*/, id);
+				case 3: /*MODIFY*/
+					modify_from_client(dummy, rand()%10, id);
 					break;
 			}
 
-			//sleep(1);
+			sleep(1);
 		}
 
 	}
@@ -489,7 +495,7 @@ void clientPrint(int id){
 		}
 
 		//Change sleep
-		//sleep(2);
+		sleep(1);
 		while(sleepTime > 0){
 			yield();
 			sleepTime--;
