@@ -16,7 +16,7 @@
 
 #define ADD		1
 #define DELETE		2
-#define MODIFY		10	//modify case will include the entry too. Hence starts from 10
+#define MODIFY		3
 #define PRINT		4
 #define CONTINUED	-1
 
@@ -230,28 +230,26 @@ message_t delete(server_data *table, message_t clientMsg){
 }
 
 
-//modify command from the client
-int modify_from_client(const char *in_string, int entry, int port_nr){
+int modify_from_client(const char *in_string, int port_nr){
 	int i=0, ret, elems;
-	int entry_exists=FAILURE; 	//session id: will be used for messages 
+	int s_id=1; 	//session id: will be used for messages 
 	int len = strlen(in_string);
 	int in_string_idx = 0;
 	message_t packet, response;
 
-	printf("Modifying Entry %d to %s\n", entry, in_string);
+	//	printf("Length = %d\n", len);
 	while(len > 0){
 		//break in_string and keep sending messages with appropriate headers
 		//Add headers - idx 0 and 1
 		memset(packet.message, 0, sizeof(int) * 10);
 		packet.message[0] = MODIFY;
-		packet.message[0] += entry;	//the server subtracts 10 from abs to get the entry to be deleted
 		if (len <= 8)	//data segment of each packet is 8 integers long
 			packet.message[0] *= -1;	//send negative command to signify last packet
 
-		if (entry_exists>0)
+		if (s_id>0)
 			packet.message[1] = port_nr; /*client's port or session id*/
 		else
-			packet.message[1] = entry_exists;
+			packet.message[1] = s_id;
 
 		//start adding message
 		//printf("MIN : %d ", MIN(len,8));
@@ -264,20 +262,14 @@ int modify_from_client(const char *in_string, int entry, int port_nr){
 
 		//recv server's response and update session id
 		response = receive (port_nr);
-		entry_exists = response.message[1];
-		
-		if (entry_exists == FAILURE){
-			printf("Entry number %d cannot be modified currently\n", entry);
-			return FAILURE;	//Completed entry doesn't exist
-			
-		}
+		s_id = response.message[1];
 
 		len-=8;
 
 		sleep(1);
 	}
-	return SUCCESS;
 }
+
 
 //Populates printData variable
 void populate_printData(server_data *table){
@@ -368,22 +360,16 @@ void server(int port){
 				break;
 
 			default:	
-				if (abs(msg.message[0]) >= 10){	//MODIFY
-					entry = abs(msg.message[0]) - 10;
-					if (table[entry].flag == EMPTY){
-						//entry cannot be deleted, Create corresponding ack and send
-						returnMsg.message[0] = MODIFY;
-						returnMsg.message[1] = FAILURE;
-						send(returnMsg, msg.message[1]);
-						break;
-					}
-
-					//Not full, so delete and start adding
-					returnMsg = delete(table, msg);
+				entry = abs(msg.message[1]);
+				returnMsg = delete(table, msg);
+				send(returnMsg, msg.message[2]);
+				if (returnMsg.message[1] == SUCCESS){
+					//receive next message and add to the server
+					msg = receive(port);
 					add_at_server(table, msg, entry);
-
-
 				}
+
+				
 				break;
 		}
 	}
@@ -431,8 +417,28 @@ void client(int id){
 					break;
 
 				case 3: /*MODIFY*/
-					modify_from_client(dummy, rand()%10, id);
+					//First Delete
+					sessionId = rand()%1; /*0; //TODO: pick a session id*/
+					msg.message[0] = MODIFY;
+					msg.message[1] = sessionId;
+					msg.message[2] = id;
+
+					//Send the message to server and get back its response
+					send(msg, SERVER_PORT);
+					returnMsg = receive(id);
+
+					if(returnMsg.message[1] == SUCCESS){
+						//add to the server at the specified entry
+						modify_from_client(dummy, id);
+						printf("Modified Entry %d\n", abs(sessionId));
+					}
+					else{
+						printf("Cannot modify entry %d\n", abs(sessionId));
+					}
+
 					break;
+
+
 			}
 
 			sleep(1);
