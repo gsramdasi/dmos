@@ -7,6 +7,9 @@
 #define SERVER_PORT 	10
 #define SERVER_SIZE 	10
 
+#define TRUE 1
+#define FALSE 0
+
 #define SUCCESS 	0
 #define FAILURE 	1
 
@@ -27,6 +30,7 @@ typedef struct{
 	char data[200];
 	int size;
 	int flag;
+	int modifying;
 	int client_id;
 }server_data;
 
@@ -38,6 +42,7 @@ int printDataSize;
 void initialize_server_data(server_data *data){
 	data->size = 0;
 	data->flag = EMPTY;
+	data->modifying = FALSE;
 	data->client_id = -1;	
 	memset(data->data, '\0', (sizeof(char) * 200));
 
@@ -197,6 +202,7 @@ message_t add_at_server(server_data *table, message_t clientMsg, int pos){
 			if (table[table_idx].data[table[table_idx].size] == '\0'){
 				printf("Server : Msg completely recieved\n");
 				table[table_idx].flag = FULL;
+				table[table_idx].modifying = FALSE;
 				break;
 			}
 			table[table_idx].size++;
@@ -248,18 +254,23 @@ int modify_from_client(const char *in_string, int port_nr, int s_id){
 			packet.message[0] *= -1;	//send negative command to signify last packet
 
 		packet.message[1] =  s_id;
+						DEBUG;
 
 		//start adding message
 		//printf("MIN : %d ", MIN(len,8));
 		elems = MIN(len,8);
+						DEBUG;
 		for (i=0; i<elems; i++){
 			packet.message[i+2] = (int)in_string[in_string_idx++];
 		}
 
+						DEBUG;
 		ret = send(packet, SERVER_PORT);
 
+						DEBUG;
 		//recv server's response and update session id
 		response = receive (port_nr);
+						DEBUG;
 		//		s_id = response.message[1];
 
 		len-=8;
@@ -358,13 +369,20 @@ void server(int port){
 				break;
 
 			case MODIFY:
+					
+				entry = abs(msg.message[1]);
+				if(table[entry].modifying == FALSE){
+					returnMsg = delete(table, msg);
 					table[entry].flag = INCOMPLETE;
-					//receive next message and add to the server
-					add_at_server(table, msg, entry);
+					table[entry].modifying =TRUE;
+					send(returnMsg, msg.message[2]);
+				}
+				//receive next message and add to the server
+				add_at_server(table, msg, entry);
 
 
 				break;
-			
+
 			default:
 				break;
 		}
@@ -415,9 +433,9 @@ void client(int id){
 
 				case MODIFY:
 					//First Delete
-					sessionId = rand()%1; /*0; //TODO: pick a session id*/
+					sessionId = rand()%2; /*0; //TODO: pick a session id*/
 					sessionId = -1 * sessionId;
-					msg.message[0] = DELETE;
+					msg.message[0] = MODIFY;
 					msg.message[1] = sessionId;
 					msg.message[2] = id;
 
