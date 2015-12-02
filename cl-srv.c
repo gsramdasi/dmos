@@ -229,10 +229,9 @@ message_t delete(server_data *table, message_t clientMsg){
 	return returnMsg;
 }
 
-
-int modify_from_client(const char *in_string, int port_nr){
+//Start sending to server with a negative session id from the very beginning
+int modify_from_client(const char *in_string, int port_nr, int s_id){
 	int i=0, ret, elems;
-	int s_id=1; 	//session id: will be used for messages 
 	int len = strlen(in_string);
 	int in_string_idx = 0;
 	message_t packet, response;
@@ -246,10 +245,7 @@ int modify_from_client(const char *in_string, int port_nr){
 		if (len <= 8)	//data segment of each packet is 8 integers long
 			packet.message[0] *= -1;	//send negative command to signify last packet
 
-		if (s_id>0)
-			packet.message[1] = port_nr; /*client's port or session id*/
-		else
-			packet.message[1] = s_id;
+		packet.message[1] = -1 * s_id;
 
 		//start adding message
 		//printf("MIN : %d ", MIN(len,8));
@@ -359,17 +355,15 @@ void server(int port){
 				send(returnMsg, msg.message[1]);
 				break;
 
-			default:	
-				entry = abs(msg.message[1]);
-				returnMsg = delete(table, msg);
-				send(returnMsg, msg.message[2]);
-				if (returnMsg.message[1] == SUCCESS){
+			case MODIFY:
+					table[entry].flag = INCOMPLETE;
 					//receive next message and add to the server
-					msg = receive(port);
 					add_at_server(table, msg, entry);
-				}
 
-				
+
+				break;
+			
+			default:
 				break;
 		}
 	}
@@ -395,11 +389,11 @@ void client(int id){
 
 			ret = random_string (dummy);
 			switch(choice){
-				case 1:	/*ADD*/
+				case ADD:
 					add_from_client(dummy, id);
 					break;
 
-				case 2: /*DELETE*/
+				case DELETE:
 					sessionId = rand()%10; /*0; //TODO: pick a session id*/
 					msg.message[0] = DELETE;
 					msg.message[1] = sessionId;
@@ -416,10 +410,10 @@ void client(int id){
 
 					break;
 
-				case 3: /*MODIFY*/
+				case MODIFY:
 					//First Delete
 					sessionId = rand()%1; /*0; //TODO: pick a session id*/
-					msg.message[0] = MODIFY;
+					msg.message[0] = DELETE;
 					msg.message[1] = sessionId;
 					msg.message[2] = id;
 
@@ -428,8 +422,10 @@ void client(int id){
 					returnMsg = receive(id);
 
 					if(returnMsg.message[1] == SUCCESS){
+						printf("Here\n");
+						DEBUG;
 						//add to the server at the specified entry
-						modify_from_client(dummy, id);
+						modify_from_client(dummy, id, (-1 * sessionId));
 						printf("Modified Entry %d\n", abs(sessionId));
 					}
 					else{
